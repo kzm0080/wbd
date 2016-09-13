@@ -3,6 +3,7 @@ Created on Sep  02, 2016
 
 @author: KIRAN KUMAR MEDASANI
 '''
+import math
 
 class Angle():
     def __init__(self):
@@ -91,51 +92,77 @@ class Angle():
           
     def add(self, angle):         
              
-            self.degrees += self.getDegreesMinutes(angle, "D")  # Get Degrees from angle
-            self.minutes += self.getDegreesMinutes(angle, "M")  # Get Minutes from angle    
-            return self.getDegrees()
-            
-    
-    def subtract(self, angle):
-        
-        if isinstance(angle, Angle):
-            self.degrees -= self.getDegreesMinutes(angle, "D")  # Get Degrees from angle
-            self.minutes -= self.getDegreesMinutes(angle, "M")  # Get Minutes from angle
-
-            return self.getDegrees()
-        else:       
-            raise ValueError("Angle.add:  angle is not an instance of Angle.")
-    
-    def compare(self, angle):
-        
-        if isinstance(angle, Angle):           
-            angleDegree=angle.split("d")
+        try:    
+            angleDegree = angle.split("d")
             if len(angleDegree) < 2:  # If length is less than two
                 raise ValueError("Angle.compare: Missing Separator 'd'")
             elif len(angleDegree) > 2:  # If length is greater than two 
                 raise ValueError("Angle.compare: More than one 'd' separator is not allowed")
-            elif angleDegree.startswith("d"):  # If angle starts with 'd'
+            elif angle.startswith("d"):  # If angle starts with 'd'
                 raise ValueError("Angle.compare: Missing degrees")
-            elif angleDegree.endswith("d"):  # If angle ends with 'd'
-                raise ValueError("Angle.compare: Missing Minutes")
+            elif angle.endswith("d"):  # If angle ends with 'd'
+                raise ValueError("Angle.compare: Missing Minutes") 
+             
+            self.degrees += self.getDegreesMinutes(angle, "D")  # Get Degrees from angle
+            self.minutes += self.getDegreesMinutes(angle, "M")  # Get Minutes from angle    
+            return self.getDegrees()
+        except:
+            raise ValueError("Angle.add: Invalid Angle")
             
-        getMinute = self.minutes / 60  # Get degrees from minutes
-        getMinute = float(getMinute)
-        getMinute = round(getMinute, 1)  # Round to one decimal
-        compDegree=(self.degrees + getMinute) % 360  # Get degrees as modulus of degrees and minutes
+    
+    def subtract(self, angle):
         
-        
-        self.degrees = self.getDegreesMinutes(angle, "D")  # Get Degrees from angle
-        self.minutes = self.getDegreesMinutes(angle, "M")  # Get Minutes from angle
+        try:
+            angleDegree = angle.split("d")
+            if len(angleDegree) < 2:  # If length is less than two
+                raise ValueError("Angle.compare: Missing Separator 'd'")
+            elif len(angleDegree) > 2:  # If length is greater than two 
+                raise ValueError("Angle.compare: More than one 'd' separator is not allowed")
+            elif angle.startswith("d"):  # If angle starts with 'd'
+                raise ValueError("Angle.compare: Missing degrees")
+            elif angle.endswith("d"):  # If angle ends with 'd'
+                raise ValueError("Angle.compare: Missing Minutes") 
+            
+            self.degrees -= self.getDegreesMinutes(angle, "D")  # Get Degrees from angle
+            self.minutes -= self.getDegreesMinutes(angle, "M")  # Get Minutes from angle
 
-        comp1Degree=self.getDegrees()       
-
-        if compDegree > comp1Degree:
-            return 1
-        elif compDegree < comp1Degree:
-            return -1
-        else:
-            return 0
+            return self.getDegrees()
+        except:
+            raise ValueError("Angle.add: Invalid Angle")
+    
+    def compare(self, angle):        
+               
+        try:                
+            angleDegree = angle.split("d")
+            if len(angleDegree) < 2:  # If length is less than two
+                raise ValueError("Angle.compare: Missing Separator 'd'")
+            elif len(angleDegree) > 2:  # If length is greater than two 
+                raise ValueError("Angle.compare: More than one 'd' separator is not allowed")
+            elif angle.startswith("d"):  # If angle starts with 'd'
+                raise ValueError("Angle.compare: Missing degrees")
+            elif angle.endswith("d"):  # If angle ends with 'd'
+                raise ValueError("Angle.compare: Missing Minutes")            
+          
+            getMinute = self.minutes / 60  # Get degrees from minutes
+            getMinute = float(getMinute)
+            getMinute = round(getMinute, 1)  # Round to one decimal
+            compDegree = (self.degrees + getMinute) % 360  # Get degrees as modulus of degrees and minutes
+            
+             
+            self.degrees = self.getDegreesMinutes(angle, "D")  # Get Degrees from angle
+            self.minutes = self.getDegreesMinutes(angle, "M")  # Get Minutes from angle
+    
+            comp1Degree = self.getDegrees()       
+    
+            if compDegree > comp1Degree:
+                return 1
+            elif compDegree < comp1Degree:
+                return -1
+            else:
+                return 0
+       
+        except:
+            raise ValueError("Angle.add: Invalid Angle")
                 
     def getString(self):
         return str(int(self.degrees)) + "d" + str(round(self.minutes, 1))  # Get string from degrees and minutes
