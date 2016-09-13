@@ -128,7 +128,7 @@ class Angle():
 
             return self.getDegrees()
         except:
-            raise ValueError("Angle.add: Invalid Angle")
+            raise ValueError("Angle.Subtract: Invalid Angle")
     
     def compare(self, angle):        
                
