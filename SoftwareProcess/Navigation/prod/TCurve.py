@@ -61,7 +61,7 @@ class TCurve(object):
         result = base ** exponent
         return result
     
-    def integrate(self, t, n, f):
+    def integrate(self, t, n, f):        
         pass
         
         

@@ -224,7 +224,7 @@ class TCurveTest(unittest.TestCase):
 
     def test400_010_ShouldCalculateFStarterCase(self):
         myT = T.TCurve(self.nominalN)
-        self.assertAlmostEquals(myT.f(0, 5), 1, 4)
+        self.assertAlmostEquals(myT.f(0, 5), 1, 4)        
         
     def test400_020_ShouldCalculateF(self):
         myT = T.TCurve(self.nominalN)
