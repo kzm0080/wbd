@@ -12,18 +12,23 @@ class Angle():
         
     def setDegrees(self, degrees=None):  # Set the degrees to none 
         if(degrees == None):
-            raise ValueError("Angle.setDegrees: Degrees should not be empty")
+            #raise ValueError("Angle.setDegrees: Degrees should not be empty")
+            degrees=0
+        
         if(isinstance(degrees, (int, float))):  # Check whether the degrees are number or float          
             try:  # Starting Exception handling using try block               
                 if(float(degrees)):                                                      
                     degMod = self.degreesMod(degrees)  # Gets degrees depending on the input 
-                    self.degrees = round(degMod, 1)  # Assigning the result to degrees
-                    self.getMinutesFromDegrees(self.degrees)
+                    
+                    
+                    self.degrees =float(degMod)#round(degMod, 1)  # Assigning the result to degrees
+                    self.minutes = 0.0
+                    #self.getMinutesFromDegrees(self.degrees)
                 else:  # if degrees are integer
                     degMod = self.degreesMod(degrees)  # Get degrees as output
-                    self.degrees = round(degMod, 1)  # Assigning degrees
+                    self.degrees = degMod  # Assigning degrees
                     self.minutes = 0.0  # Assigning Minutes
-                return self.degrees                
+                return self.degrees
             except:
                 raise ValueError("Angle.setDegrees: Invalid data")            
         else:  # If degrees received are Non Integer and Float numbers                       
@@ -90,8 +95,15 @@ class Angle():
         return angleDeg
         
           
-    def add(self, angle):         
-             
+    def add(self, angle=None):         
+        if angle == None:  # If None
+            angle="0d0.0"
+        else:
+            if  isinstance(angle, Angle):
+                angle=str(int(angle.degrees))+"d"+ str(angle.minutes)
+            else:
+                angle=angle
+       
         try:    
             angleDegree = angle.split("d")
             if len(angleDegree) < 2:  # If length is less than two
@@ -103,15 +115,25 @@ class Angle():
             elif angle.endswith("d"):  # If angle ends with 'd'
                 raise ValueError("Angle.compare: Missing Minutes") 
              
+          
+            
             self.degrees += self.getDegreesMinutes(angle, "D")  # Get Degrees from angle
+           
             self.minutes += self.getDegreesMinutes(angle, "M")  # Get Minutes from angle    
+           
             return self.getDegrees()
         except:
             raise ValueError("Angle.add: Invalid Angle")
             
     
-    def subtract(self, angle):
-        
+    def subtract(self, angle=None):
+        if angle == None:  # If None
+            angle="0d0.0"
+        else:
+            if  isinstance(angle, Angle):
+                angle=str(int(angle.degrees))+"d"+ str(angle.minutes)
+            else:
+                angle=angle
         try:
             angleDegree = angle.split("d")
             if len(angleDegree) < 2:  # If length is less than two
@@ -130,8 +152,14 @@ class Angle():
         except:
             raise ValueError("Angle.Subtract: Invalid Angle")
     
-    def compare(self, angle):        
-               
+    def compare(self, angle=None):        
+        if angle == None:  # If None
+            angle="0d0.0"
+        else:
+            if  isinstance(angle, Angle):
+                angle=str(int(angle.degrees))+"d"+ str(angle.minutes)
+            else:
+                angle=angle       
         try:                
             angleDegree = angle.split("d")
             if len(angleDegree) < 2:  # If length is less than two
@@ -165,14 +193,18 @@ class Angle():
             raise ValueError("Angle.add: Invalid Angle")
                 
     def getString(self):
-        return str(int(self.degrees)) + "d" + str(round(self.minutes, 1))  # Get string from degrees and minutes
+        return str(int(self.degrees)) + "d" + str(round(self.minutes, 1/10))  # Get string from degrees and minutes
     
     def getDegrees(self):       
+       
         getMinute = self.minutes / 60  # Get degrees from minutes
+               
         getMinute = float(getMinute)
-        getMinute = round(getMinute, 1)  # Round to one decimal
-        return (self.degrees + getMinute) % 360  # Get degrees as modulus of degrees and minutes    
-    
+        #getMinute=round(getMinute,1)
+       
+        cDegrees= (self.degrees + getMinute) % 360  # Get degrees as modulus of degrees and minutes    
+        
+        return cDegrees
     # Method to get degrees
     # Used in setDegrees
     def degreesMod(self, degrees):                   
@@ -190,11 +222,12 @@ class Angle():
     # Used in add,subtract
     def getDegreesMinutes(self, angle, split):
         if split == "D":  # For degrees
+           
             return int(angle.split("d")[0])
         else:  # For Minutes
             if(angle.startswith("-")):
                 return float("-" + angle.split("d")[1])
-            else:
+            else:                
                 return float(angle.split("d")[1])
             
         
