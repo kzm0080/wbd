@@ -50,9 +50,7 @@ class Fix(object):
             except ValueError: # Return this exception if any error
                 raise ValueError("Fix.__init__:  Can not create log file")
     
-    def writeLog(self,logMsg):
-        self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + ":\t " + logMsg + "\n")
-    
+       
     # Created a new method for time
     # Method returns the time as per the time zone to write into log file
     def gettimeUTC(self):
@@ -212,6 +210,12 @@ class Fix(object):
     def getSightings(self):
         approximateLatitude = "0d0.0"    # set the approximate latitude to zero        
         approximateLongitude = "0d0.0"   # set the approximate longitude to zero
+        
+        # adding latitude and longitude to tuple
+               
+        approximateLocation=[]
+              
+       
 
         try:
             # Check of xml exists
@@ -290,10 +294,6 @@ class Fix(object):
         else:
             raise ValueError("Fix.getSightings:  No fix tag in xml sighting file")
         
-        # adding latitude and longitude to tuple
-               
-        approximateLocation=[]
-              
         approximateLocation.append({                
                 approximateLatitude  : approximateLatitude,
                 approximateLongitude :approximateLongitude
