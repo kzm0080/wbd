@@ -15,6 +15,8 @@ import xml.dom.minidom
 import xml.etree.ElementTree
 import Angle as Angle
 import math
+import os
+from _ast import Str
 
 
 
@@ -25,12 +27,13 @@ class Fix(object):
     # Constructor of the class
     def __init__(self, logFile="log.txt"):
         self.logFileOpen=""
+        self.sightingError = 0
         
         if(logFile == None):  #If log file name received is empty 
             raise ValueError("Fix.__init__: log file name should not be empty")  #Check if the file name is empty
         
         elif (isinstance(logFile, str) == False):
-            raise ValueError("Fix.__init__: log file name must be string")  #
+            raise ValueError("Fix.__init__: log file name must be string")  # Check if it is string
                    
         elif len(logFile) < 1: # Check the log file length
             raise ValueError("Fix.__init__: Invalid file name") # Raise exception if the file name does not match
@@ -40,15 +43,102 @@ class Fix(object):
             try:  # Start to handle exceptions           
             
                 logFileOpen=open(logFile,"a") # To open the flat file            
-                self.logFileOpen=logFileOpen
+                self.logFileOpen=logFileOpen # Assigning to the global
+                
+                logPath= os.path.abspath(logFile) # Getting the path of the flat file
 
                 logDate=self.gettimeUTC() # Getting the date time with time zone
-                # Creating a log entry
-                self.logFileOpen.write("LOG:\t" + logDate + ":\t Start of log\n")
+                
+                # Creating a log entry                
+                self.logFileOpen.write("LOG:\t" + logDate + "\t " + "Log File:\t "+ logPath +" \n")
                 #self.writeLog(logMsg="Start of log")
                 
             except ValueError: # Return this exception if any error
+                self.sightingError += 1
                 raise ValueError("Fix.__init__:  Can not create log file")
+            
+            
+    def setAriesFile(self, ariesFile):
+        
+        if(ariesFile == None):  #If aries file name received is empty 
+            raise ValueError("Fix.setAriesFile: aries file name should not be empty")  #Check if the file name is empty
+        
+        elif (isinstance(ariesFile, str) == False):
+            raise ValueError("Fix.setAriesFile: aries file name must be string")  # Check if it is string
+                   
+        elif len(ariesFile) < 1: # Check the log file length
+            raise ValueError("Fix.setAriesFile: Invalid file name") # Raise exception if the file name does not match
+        
+        aFile=ariesFile.split(".")
+        aFileSplit = aFile[0]
+        
+        # Check if the split string has the correct length
+        if (len(aFile)) <= 1:
+            self.sightingError += 1
+            raise (ValueError("Fix.setAriesFile:  Invalid file name"))
+        elif upper(aFile[1])!="TXT": # If extension is not text 
+            raise ValueError("Fix.setAriesFile:  Invalid file name")
+        
+        self.ariesFile = aFileSplit + ".txt"   # Assign to the global         
+       
+        ariesPath = os.path.abspath(self.ariesFile)  # get file path of file
+        
+        logDate=self.gettimeUTC() # Getting the date time with time zone
+    
+        
+        self.logFileOpen.write("LOG:\t" + logDate + "\t " + "Aries File:\t "+ ariesPath +" \n")
+       
+        # checking ariesfile is exist or not.
+        try:
+            f = open(self.ariesFile, "r")
+            f.close()
+        except Exception as e:
+            raise (ValueError("Fix.setAriesFile:  Aries file could not be opened"))
+        # return full path of aries file.
+        return ariesPath
+    
+    
+    def setStarFile(self, starFile):
+        
+        if(starFile == None):  #If aries file name received is empty 
+            raise ValueError("Fix.setStarFile: Star file name should not be empty")  #Check if the file name is empty
+        
+        elif (isinstance(starFile, str) == False):
+            raise ValueError("Fix.setStarFile: Star file name must be string")  # Check if it is string
+                   
+        elif len(starFile) < 1: # Check the log file length
+            raise ValueError("Fix.setStarFile: Invalid file name") # Raise exception if the file name does not match
+        
+        stFile=starFile.split(".")
+        starFileSplit = stFile[0]
+        
+        # Check if the split string has the correct length
+        if (len(stFile)) <= 1:
+            self.sightingError += 1
+            raise (ValueError("Fix.setStarFile:  Invalid file name"))
+        elif upper(stFile[1])!="TXT": # If extension is not text 
+            raise ValueError("Fix.setStarFile:  Invalid file name")
+               
+        
+        self.starFile = starFileSplit + ".txt"  # set star file as global.
+        
+        starFilePath = os.path.abspath(self.starFile) # get full path of star file.
+        
+        logDate=self.gettimeUTC() # Getting the date time with time zone
+
+        # make a string of filename and file full path with current datetime.
+        self.logFileOpen.write("LOG:\t" + logDate + "\t " + "Star File:\t "+ starFilePath +" \n")
+
+        # checking stars file is exist or not.
+        try:
+            f = open(self.starFile, "r")
+            f.close()
+        except Exception as e:
+            raise (ValueError("Fix.setStarFile:  Stars file could not be opened"))
+        # return full path of aries file.
+        return starFilePath
+
+
     
        
     # Created a new method for time
@@ -87,18 +177,23 @@ class Fix(object):
         
         self.sightingFile = sightingFile # Assigning the name
         
-        try:
+        
+        
+        try:            
+            sightingPath = os.path.abspath(self.sightingFile)
             # Write the log file
-            self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + ":\tStart of sighting file " + self.sightingFile + "\n")
+            self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + "\t Sighting file:\t " + sightingPath + "\n")
         except ValueError: # Return this exception if any error
+            self.sightingError += 1
             raise ValueError("Fix.setSightingFile:  Can not write to log file")
         try:
             # Write the log file
             chkXMLExists=open(self.sightingFile,"r")
-            chkXMLExists.close()            
+            chkXMLExists.close()                  
         except: # Return this exception if any error
+            self.sightingError += 1
             raise ValueError("Fix.setSightingFile: True, Can not find the xml file or a new file")  
-        return False # Returns false if exists, true if new
+        return sightingPath # Returns false if exists, true if new
     
     # Method to parse the sighting tag 
     # Implemented the selected conditions as applied
@@ -111,6 +206,7 @@ class Fix(object):
             tagXMLSightingValue= tagXMLSighting.childNodes[0].data    
                
         except: #if any error in reading the data
+            self.sightingError += 1
             if tagID in (1,2,3,4) : # if tag name is body,date, time,observation
                 raise ValueError("Fix.getSightings-getXMLElement: " + tagName +"  tag is missing in sighting : "+ tagData)
             elif tagID==5: # if tag name is height  
@@ -226,6 +322,7 @@ class Fix(object):
         try:
             xnlImport = xml.dom.minidom.parse(self.sightingFile)  # Parse the xml file for reading data
         except Exception:
+            self.sightingError += 1
             raise ValueError("Fix.getSightings:  Can not parse the xml sighting file")
         
         # Code to get the root element
@@ -237,7 +334,8 @@ class Fix(object):
             
             sighting = getXML.getElementsByTagName("sighting") # Get the elements in the sighting tag
                         
-            for tagData in sighting: # for each sighting data           
+            for tagData in sighting: # for each sighting data     
+                createDictonary= {} # Creating for sorting the data    
                 self.getXMLElement('body', 1, tagData) # if tag name is body
                 self.getXMLElement('date', 2, tagData) # if tag name is date
                 self.getXMLElement('time', 3, tagData)  # if tag name is time
@@ -246,6 +344,16 @@ class Fix(object):
                 self.getXMLElement('temperature', 6, tagData)  # if tag name is temperature
                 self.getXMLElement('pressure', 7, tagData) # if tag name is pressure
                 self.getXMLElement('horizon', 8, tagData) # if tag name is horizon
+                
+                createDictonary["body"]=self.body
+                createDictonary["date"]=self.date
+                createDictonary["time"]=self.time
+                createDictonary["observation"]=self.observation
+                createDictonary["height"]=self.height
+                createDictonary["temperature"]=self.temperature
+                createDictonary["pressure"]=self.pressure
+                createDictonary["horizon"]=self.horizon
+                
                 print self.body
                 print self.date
                 print self.time
@@ -262,6 +370,7 @@ class Fix(object):
                     else:
                         dip=0.0 # default to zero
                 except: # Return this exception if any error
+                    self.sightingError += 1
                     raise ValueError("Fix.getSightings:  can not calculate dip")
                     
                 pressure= float(self.pressure) # converting pressure to float
@@ -277,27 +386,154 @@ class Fix(object):
                     angle.setDegrees(adjustedAltitude)
                     
                     aString=angle.getString()
+                    createDictonary["adjustedAltitude"] = aString
+                    createDictonary["datetime"] = datetime.strptime(self.date + " " + self.time, "%Y-%m-%d %H:%M:%S")
                     # adjustedAltitude=round(adjustedAltitude,1/10) # adjusting to the nearest 0.1
                     
                 except: # Return this exception if any error
+                    self.sightingError += 1
                     raise ValueError("Fix.getSightings:  can not calculate adjustedAltitude")
-                
-                try:
-                    self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + ":\t" + self.body + "\t" + self.date + "\t" + self.time + "\t" + aString + "\n")
+                 
+                try:                        
+                    # split time where received from sighting file and set hours, minutes and seconds.
+                    splitHours = self.time.split(":")  # Get hours
+                    tHours=splitHours[0]
+                    splitMinutes = self.time.split(":") # Get Minutes
+                    tMinutes=splitMinutes[1]
+                    splitSeconds = self.time.split(":") # Get Seconds
+                    tSeconds=splitSeconds[2]
+                    
+                    # convert minutes in seconds
+                    mSeconds = (int(tMinutes) * 60) 
+                    mSeconds = mSeconds+ int(tSeconds)
+                    self.mSeconds=mSeconds
+                     
+                    chkDate = datetime.strptime(self.date, '%Y-%m-%d').strftime('%m/%d/%y') # Format date
+                                    
+                                                
                 except: # Return this exception if any error
-                    raise ValueError("Fix.getSightings:  can not write measurements to log file")
+                    self.sightingError += 1
+                    raise ValueError("Fix.getSightings:  Can not split or format time")
+                
+                angle1 = Angle.Angle()  # create new Angle instance.
+                
+                readStar = open(self.starFile, "r") # open stars file in read mode.
+        
+                findBody = False # Taken a boolean value to find whether the star file contains data or not
+                                        
+                
+                for starData in readStar: # read each line from star file    
+                    
+                    sBodySplit= starData.split("\t") # split line using tab separator
+                    sBody=sBodySplit[0]  # First element of each file is name
+                    
+                    if (isinstance(sBody, str) == False):        
+                        raise ValueError("Fix.getSightings:  Name in the star file must be string")  #Check if the file name is string
+                    
+                    # split line and take first element as date.
+                    sDateSplit = starData.split("\t") # split line using tab separator
+                    sDate=sDateSplit[1] # Second element of each file is date
+                    
+                    # To search star file.
+                    if sBody == self.body and sDate == chkDate: # if body and date match
+                       
+                        print sBody,sDate
+                        
+                        sAngleSplit=starData.split("\t") # Split the line of the matched star data
+                        sAngle=sAngleSplit[2] # Get the angle
+                        SHAStar = angle1.setDegreesAndMinutes(sAngle) # Get degrees and minutes from the angle
+                        
+                        self.SHAStar=SHAStar # Assign to global
+                        
+                        sLatitudeSplit=starData.split("\t")  # Split the line of the matched star data
+                        sLatitude=sLatitudeSplit[3] # Get the Latitude
+                        sLatitude=sLatitude.strip()
+                        
+                        self.starLatitude=sLatitude # Assign to global                     
+                       
+                        findBody = True # To check if the name and date are present 
+                        
+                        createDictonary["latitude"] = self.starLatitude
+                
+                readStar.close() # close stars file.
+                
+                if(findBody): # if name and date matches                                      
+                    print "match"       
+                else: # if name and date not found in stars file than return
+                    self.sightingError += 1
+                    raise ValueError("Fix.getSightings:  can not find name in star file") # returns value error
+                    continue
+                    
+                
+                readAries = open(self.ariesFile,"r")  # open aries file in read mode.
+                               
+                ariesAngle = Angle.Angle() # create an instance of angle.
+                ariesAngle1 = Angle.Angle() # create an instance of angle.
+                
+                for ariesData in readAries:  # read each line form aries file.
+                        
+                    # To split lines
+                    aDateSplit = ariesData.split("\t") # Split using tab space
+                    aDate=aDateSplit[0] # Get the date from the split string
+                    
+                    aHoursSplit = ariesData.split("\t") # Split using tab space                    
+                    aHours=aHoursSplit[1] # Get the hours from the split string                    
+                   
+                    aAngleSplit = ariesData.split("\t") # Split using tab space
+                    aAngle=aAngleSplit[2] # Get the angle from the split string
+                                                    
+                    cmpHours = int(tHours) # Get Hours
+                    ariesHours = int(aHours) # Get Aries Hours
+                    
+                    
+                    if aDate == chkDate and ariesHours == cmpHours: # Check for date and hours
+                        
+                        
+                        GHAAriesAngle = ariesAngle.setDegreesAndMinutes(aAngle) # Send to angle class to get degrees and minutes
+                       
+                        ObservationAngleSplit = next(readAries).split("\t") # Split using tab space
+                        ObservationAngle=ObservationAngleSplit[2] # Get the angle from the split string
+                        
+                        GHAAriesAngle1 = ariesAngle1.setDegreesAndMinutes(ObservationAngle) # Send to angle class to get degrees and minutes
+                        
+                        self.GHAAriesAngle=GHAAriesAngle # Assign to global 
+                        self.GHAAriesAngle1=GHAAriesAngle1 # Assign to global 
+                                        
+                readAries.close()  # close aries file after completion
+                        
+                # calculation for aries
+                self.GHAAriesAngle = self.GHAAriesAngle + (self.GHAAriesAngle1 - self.GHAAriesAngle) * float(self.mSeconds)/3600
+               
+                self.GHAobservation = self.GHAAriesAngle + self.SHAStar  # Get observation    
+               
+                angle.setDegrees(self.GHAobservation)  #Set as degrees to setDegrees method.
+                
+                self.GHAobservation = angle.getString() # set return value of getString 
+                    
+                # Assigning to array       
+                createDictonary["longitude"] = self.GHAobservation
+                
+                # add dictionary in list
+                approximateLocation.append(createDictonary)
+                
+                # sort data 
+                approximateLocation.sort(key=lambda sort: sort['body'])  # sort by body 
+                approximateLocation.sort(key=lambda sort: sort['datetime'])  # sort by datetime 
+                
             try:
-                self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + ":\tEnd of sighting file " + self.sightingFile + "\n")
+                for val in approximateLocation: # Read each value and write in log
+                                     
+                    self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + ":\t" + val["body"] + "\t" + val["date"] + "\t" + val["time"] + "\t" + val["adjustedAltitude"] + "\t" + val["latitude"] + "\t" + val["longitude"] + "\n")
+            except: # Return this exception if any error
+                self.sightingError += 1
+                raise ValueError("Fix.getSightings:  can not write measurements to log file")
+            try:
+                self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + ":\t" + " Sighting errors:" + "\t" + str(self.sightingError) + "\n")
                 self.logFileOpen.close()
             except: # Return this exception if any error
                 raise ValueError("Fix.getSightings:  can not close the log file")
         else:
-            raise ValueError("Fix.getSightings:  No fix tag in xml sighting file")
-        
-        approximateLocation.append({                
-                approximateLatitude  : approximateLatitude,
-                approximateLongitude :approximateLongitude
-        })
-        
+            raise ValueError("Fix.getSightings:  No fix tag in xml sighting file")    
+       
         return approximateLocation
         
