@@ -36,8 +36,7 @@ class Fix(object):
             raise ValueError("Fix.__init__: log file name must be string")  # Check if it is string
                    
         elif len(logFile) < 1: # Check the log file length
-            raise ValueError("Fix.__init__: Invalid file name") # Raise exception if the file name does not match
-        
+            raise ValueError("Fix.__init__: Invalid file name") # Raise exception if the file name does not match        
        
         else:
             try:  # Start to handle exceptions           
