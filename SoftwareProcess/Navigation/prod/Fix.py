@@ -300,18 +300,100 @@ class Fix(object):
         
         return True
     
+    
+    def getCaluculations(self):
+        pass
+    
     # Method to get and process data of sighting file.
     # Calculate and returns the values. 
-    def getSightings(self):
+    def getSightings(self,assumedLatitude="0d0.0", assumedLongitude="0d0.0"):
         approximateLatitude = "0d0.0"    # set the approximate latitude to zero        
         approximateLongitude = "0d0.0"   # set the approximate longitude to zero
         
         # adding latitude and longitude to tuple
                
         approximateLocation=[]
-              
-       
+        
+        if (isinstance(assumedLatitude, str) == False):
+            raise ValueError("Fix.getSightings: Please enter valid string")  # Check if it is string
+        
+        if (isinstance(assumedLongitude, str) == False):
+            raise ValueError("Fix.getSightings: Please enter valid string")  # Check if it is string
+         
+        assumedLatitudeAngle=Angle.Angle()  # To get angle of assumed angle
+        assumedLongitudeAngle=Angle.Angle()  # To get angle of assumed angle
 
+        hemisphere ="" # To get latitude based on hemisphere
+        sHemisphere ="S"
+        nHemisphere ="H"
+        #if assumedLatitude.contains(sHemisphere) or assumedLatitude.contains(nHemisphere) :
+        if sHemisphere in assumedLatitude:
+                
+            assumedLatitude=assumedLatitude.replace(sHemisphere,"")
+            hemisphere=sHemisphere
+            
+            assumedLatitudeAngle.setDegreesAndMinutes(assumedLatitude)
+        
+        if nHemisphere in assumedLatitude:
+                
+            assumedLatitude=assumedLatitude.replace(nHemisphere,"")
+            hemisphere=nHemisphere
+            assumedLatitudeAngle.setDegreesAndMinutes(assumedLatitude)
+        
+       
+        
+        self.hemisphere=hemisphere
+        
+        
+
+        assumedLatitudeSplit=assumedLatitude.split("d")
+        
+        if len(assumedLatitudeSplit) < 2:  # If length is less than two
+            raise ValueError("Fix.getSightings: Missing Separator 'd'")
+        elif len(assumedLatitudeSplit) > 2:  # If length is greater than two 
+            raise ValueError("Fix.getSightings: More than one 'd' separator is not allowed")
+        #elif assumedLatitudeSplit.startswith("d"):  # If angle starts with 'd'
+        #    raise ValueError("Fix.getSightings: Missing degrees")
+        #elif assumedLatitudeSplit.endswith("d"):  # If angle ends with 'd'
+            raise ValueError("Fix.getSightings: Missing Minutes") 
+         
+        assumedLatitudeSplitDeg=int(assumedLatitudeSplit[0])
+        if assumedLatitudeSplitDeg < 0 or assumedLatitudeSplitDeg >= 90:
+            raise ValueError("Fix.getSightings: assumedLatitude, degrees should be between 0 and 90.")
+            
+        assumedLatitudeSplitMin=float(assumedLatitudeSplit[1])
+        print assumedLatitudeSplitMin
+        if  assumedLatitudeSplitMin < 0 or assumedLatitudeSplitMin >= 60:
+            raise ValueError("Fix.getSightings: assumedLatitude, minutes should be between 0 and 60.")
+            
+        assumedLongitudeSplit=assumedLongitude.split("d")
+        
+        if len(assumedLongitudeSplit) < 2:  # If length is less than two
+            raise ValueError("Fix.getSightings: Missing Separator 'd'")
+        elif len(assumedLongitudeSplit) > 2:  # If length is greater than two 
+            raise ValueError("Fix.getSightings: More than one 'd' separator is not allowed")
+       
+         
+        assumedLongitudeDeg=int(assumedLongitudeSplit[0])
+        if assumedLongitudeDeg < 0 or assumedLongitudeDeg >= 90:
+            raise ValueError("Fix.getSightings: assumedLongitude, degrees should be between 0 and 90.")
+            
+        assumedLongitudeSplitMin=float(assumedLongitudeSplit[1])
+        print assumedLongitudeSplitMin
+        if assumedLongitudeSplitMin < 0 or assumedLongitudeSplitMin >= 60:
+            raise ValueError("Fix.getSightings: assumedLongitude, minutes should be between 0 and 60.")
+        
+        
+        assumedLongitudeAngle.setDegreesAndMinutes(assumedLongitude)
+        assumedLongitude=assumedLongitudeAngle.getDegrees()
+        
+        
+        if self.hemisphere == "S":
+            assumedLatitude = -(assumedLatitudeAngle.getDegrees())
+        else:
+            assumedLatitude = assumedLatitudeAngle.getDegrees()   
+        
+                
         try:
             # Check of xml exists
             chkXMLExists=open(self.sightingFile,"r")
@@ -382,9 +464,13 @@ class Fix(object):
                     adjustedAltitude = self.observedAltitude + dip + refraction
                     #adjustedAltitude=round(adjustedAltitude,1/10)
                     angle=Angle.Angle()
+                    angle2=Angle.Angle()
                     angle.setDegrees(adjustedAltitude)
                     
                     aString=angle.getString()
+                    
+                    angle2.setDegrees(adjustedAltitude)
+                    
                     createDictonary["adjustedAltitude"] = aString
                     createDictonary["datetime"] = datetime.strptime(self.date + " " + self.time, "%Y-%m-%d %H:%M:%S")
                     # adjustedAltitude=round(adjustedAltitude,1/10) # adjusting to the nearest 0.1
@@ -422,7 +508,7 @@ class Fix(object):
                                         
                 
                 for starData in readStar: # read each line from star file    
-                    
+                    starData=starData.strip()
                     sBodySplit= starData.split("\t") # split line using tab separator
                     sBody=sBodySplit[0]  # First element of each file is name
                     
@@ -434,7 +520,7 @@ class Fix(object):
                     sDate=sDateSplit[1] # Second element of each file is date
                     
                     # To search star file.
-                    if sBody == self.body and sDate == chkDate: # if body and date match
+                    if sBody == self.body and sDate <= chkDate: # if body and date match
                        
                         print sBody,sDate
                         
@@ -508,6 +594,64 @@ class Fix(object):
                 angle.setDegrees(self.GHAobservation)  #Set as degrees to setDegrees method.
                 
                 self.GHAobservation = angle.getString() # set return value of getString 
+                 
+                # changes
+                 
+                LHAAngle = Angle.Angle() # Set angle
+                LHAAngle.setDegreesAndMinutes(self.GHAobservation)
+                LHAAngle.add(assumedLongitudeAngle) # add latitude
+                
+                self.LHAAngle=LHAAngle # make global
+                
+                LHA = self.LHAAngle.getDegrees() # get degrees
+                
+                self.LHA=LHA
+
+                latitudeAngle = Angle.Angle() # set angle as zero
+                
+                latitudeAngle.setDegreesAndMinutes(self.starLatitude) # set degrees and minutes
+                
+                self.latitudeAngle=latitudeAngle # Assign global
+
+                sinLatitudeAngle = sin(radians(latitudeAngle.getDegrees())) # set degrees
+                sinAssumedLatitude = sin(radians(assumedLatitude)) # From latitude 
+                sinLatitude = sin(radians(latitudeAngle.getDegrees())) * sin(radians(assumedLatitude))
+                
+                self.sinLatitude=sinLatitude # Assign global
+
+                cosLatitudeAngle = cos(radians(latitudeAngle.getDegrees())) # set degrees
+                cosAssumedLatitude = cos(radians(assumedLatitude)) # From latitude 
+                cosLHA = cos(radians(self.LHA))
+                cosLatitude = cosLatitudeAngle * cosAssumedLatitude * cosLHA 
+                
+                self.cosLatitude=cosLatitude # Assign global
+
+                Distance = self.sinLatitude + self.cosLatitude # Get sum
+                correctedAltitude = degrees(asin(Distance)) 
+
+                distanceAdjustmentAngle = int(round((correctedAltitude - angle2.getDegrees()) * 60, 0))
+                createDictonary["distanceAdjustment"] = distanceAdjustmentAngle # Assign arrays
+                cosLatitudeAngle = cos(radians(assumedLatitude))
+                cosAssumedLatitude = cos(radians(correctedAltitude))
+                
+                
+                numAngle = sinLatitudeAngle - sinAssumedLatitude * Distance # Calculations
+                denAngle = cosLatitudeAngle * cosAssumedLatitude
+                
+                azimuthAdjustment = degrees(acos(numAngle / denAngle)) # azimuthAdjustment
+
+                azimuthAdjustmentAngle = Angle.Angle()
+                azimuthAdjustmentAngle.setDegrees(abs(azimuthAdjustment))
+                createDictonary['azimuthAdjustment'] = azimuthAdjustment
+
+                createDictonary['azimuthAdjustmentStr'] = ("-" if azimuthAdjustment < 0 else "") + azimuthAdjustmentAngle.getString()
+
+                if hemisphere == "S":
+                    createDictonary['assumedLatitude'] = sHemisphere + assumedLatitudeAngle.getString() # get latitude with hemisphere
+                else:
+                    createDictonary['assumedLatitude'] = assumedLatitudeAngle.getString() # get latitude angle
+                    
+                createDictonary['assumedLongitude'] = assumedLongitudeAngle.getString() # get longitude angle
                     
                 # Assigning to array       
                 createDictonary["longitude"] = self.GHAobservation
@@ -518,21 +662,55 @@ class Fix(object):
                 # sort data 
                 approximateLocation.sort(key=lambda sort: sort['body'])  # sort by body 
                 approximateLocation.sort(key=lambda sort: sort['datetime'])  # sort by datetime 
+            
+            approxLatitude=""
+            approxLngitude=""
                 
             try:
+                sumLatitude = 0.0
+                sumLongitude = 0.0
                 for val in approximateLocation: # Read each value and write in log
-                                     
-                    self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + ":\t" + val["body"] + "\t" + val["date"] + "\t" + val["time"] + "\t" + val["adjustedAltitude"] + "\t" + val["latitude"] + "\t" + val["longitude"] + "\n")
+                    sumLatitude += val['distanceAdjustment'] * cos(radians(val['azimuthAdjustment']))
+                    sumLongitude += val['distanceAdjustment'] * sin(radians(val['azimuthAdjustment']))                 
+                    self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + ":\t" + val["body"] + "\t" + val["date"] + "\t" + val["time"] + "\t" + val["adjustedAltitude"] + "\t" + val["latitude"] + "\t" 
+                                           + val["longitude"] + "\t" + val['assumedLatitude'] + "\t" + val['assumedLongitude'] + "\t" + val['azimuthAdjustmentStr'] + "\t" + str(val['distanceAdjustment']) + "\n")
+                    
+                approximateLatitude = assumedLatitude + sumLatitude / 60 # divide the  latitude by 60
+                approximateLongitude = assumedLongitude + sumLongitude / 60 # divide the  latitude by 60
+
+                # For Latitude
+                approximateLatitudeAngle = Angle.Angle() # set angle as zero
+                approximateLatitudeAngle.setDegrees(abs(approximateLatitude)) # set degrees from angle class
+                aLatitude = approximateLatitudeAngle.getString() # get angle
+                      
+                # For Longitude               
+                approximateLongitudeAngle = Angle.Angle()# set angle as zero
+                approximateLongitudeAngle.setDegrees(approximateLongitude) # set degrees from angle class
+                aLongitude = approximateLongitudeAngle.getString() # get angle
+                
+                # check For Latitude
+                if approximateLatitude < 0: # if less than zero
+                    aLatitude = sHemisphere + aLatitude
+                elif approximateLatitude > 0:  # if greater than zero
+                    aLatitude = nHemisphere + aLatitude
+                                
+                approxLatitude=aLatitude  # Assign global
+                approxLongitude=aLongitude # Assign global
+                
             except: # Return this exception if any error
                 self.sightingError += 1
                 raise ValueError("Fix.getSightings:  can not write measurements to log file")
             try:
                 self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + ":\t" + " Sighting errors:" + "\t" + str(self.sightingError) + "\n")
-                self.logFileOpen.close()
+                self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + ":\t" + " Approximate latitude:" + "\t" + approxLatitude + "\tApproximate longitude:\t" + approxLongitude + "\n")
+                self.logFileOpen.write("LOG:\t" + self.gettimeUTC() + ":\t" + " End of sighting file:" + "\t" + str(self.sightingFile) + "\n")
+                                             
+               
             except: # Return this exception if any error
                 raise ValueError("Fix.getSightings:  can not close the log file")
         else:
             raise ValueError("Fix.getSightings:  No fix tag in xml sighting file")    
        
-        return approximateLocation
+        return (approxLatitude, approxLongitude)
+        #return approximateLocation
         
