@@ -193,7 +193,7 @@ class Angle():
             raise ValueError("Angle.add: Invalid Angle")
                 
     def getString(self):
-        return str(int(self.degrees)) + "d" + str(round(self.minutes, 1/10))  # Get string from degrees and minutes
+        return str(int(self.degrees)) + "d" + str(round(self.minutes * 60, 1))  # Get string from degrees and minutes
     
     def getDegrees(self):       
        
