@@ -10,10 +10,11 @@ import Navigation.prod.Fix as Fix
 # Instantiate 
 fix1 = Fix.Fix()
 
-fixs=fix1.setSightingFile("sighting.xml")
+
+fixs=fix1.setSightingFile("sight.xml")
 fixstar=fix1.setStarFile("stars.txt")
 fixaries=fix1.setAriesFile("aries.txt")
    
 print fixs
 
-fixss=fix1.getSightings()
+fixss=fix1.getSightings("S56d35", "89d38.3")
